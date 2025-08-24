@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SheiMar — Online Shopping</title>
+<style>
+  :root{
+    --bg:#f1f3f6; --card:#fff; --muted:#6b7280;
+    --text:#111827; --accent:#1e3a8a; --accent2:#10b981; --danger:#ef4444;
+    --shadow: 0 6px 18px rgba(0,0,0,.08);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;
+    background:var(--bg); color:var(--text);
+  }
+
+  /* Top App Bar */
+  .appbar{
+    position:sticky; top:0; z-index:10;
+    background:#0f172a; color:#fff; padding:12px 16px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .brand{font-weight:800; letter-spacing:.5px; display:flex; align-items:center; gap:10px; cursor:pointer;}
+  .brand img{height:28px; width:28px; object-fit:cover; border-radius:8px; background:#fff}
+  .brand span{color:#93c5fd}
+  .search{flex:1; position:relative;}
+  .search input{
+    width:100%; padding:10px 36px 10px 12px; border-radius:12px; border:none; outline:none;
+  }
+  .search .icon{position:absolute; right:10px; top:50%; transform:translateY(-50%); opacity:.6}
+  .admin-link{cursor:pointer; font-weight:700; background:#1f2937; padding:8px 10px; border-radius:10px}
+
+  /* Bottom Tabs */
+  .tabs{
+    position:fixed; left:0; right:0; bottom:0; z-index:10;
+    background:#0f172a; color:#cbd5e1; display:flex; border-top:1px solid rgba(255,255,255,.08);
+  }
+  .tab{flex:1; text-align:center; padding:10px 6px; font-size:12px; cursor:pointer}
+  .tab.active{color:#fff}
+  .badge{
+    position:absolute; background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:999px;
+    transform:translate(-6px,-8px);
+  }
+  .tab-wrap{position:relative; display:inline-block}
+
+  /* Screens */
+  .screen{display:none; padding:14px 14px 90px}
+  .screen.active{display:block}
+
+  /* Cards / grids */
+  .banner{
+    background:linear-gradient(135deg,#1e3a8a,#3b82f6);
+    color:#fff; border-radius:var(--radius); padding:16px; box-shadow:var(--shadow); margin-bottom:14px;
+  }
+  .banner h3{margin:0 0 6px}
+  .hstack{display:flex; gap:10px; overflow:auto; padding-bottom:6px}
+  .chip{
+    background:#fff; color:#111827; border-radius:999px; padding:8px 14px; white-space:nowrap; box-shadow:var(--shadow); cursor:pointer; font-weight:600; font-size:13px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:12px;
+  }
+  @media(min-width:720px){ .grid{grid-template-columns:repeat(4,1fr)} }
+  .card{
+    background:var(--card); border-radius:14px; box-shadow:var(--shadow); overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .card img{width:100%; height:150px; object-fit:cover}
+  .card .p{padding:10px}
+  .title{font-weight:700; font-size:14px; line-height:1.2; margin:2px 0 6px}
+  .muted{color:var(--muted); font-size:12px}
+  .price{font-weight:800; color:#065f46}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:10px 12px; border-radius:12px; border:none; cursor:pointer; font-weight:700;
+  }
+  .btn.primary{background:var(--accent); color:#fff}
+  .btn.success{background:var(--accent2); color:#fff}
+  .btn.light{background:#e5e7eb}
+  .btn.danger{background:var(--danger); color:#fff}
+  .btn.block{width:100%}
+  .qty{display:inline-flex; align-items:center; gap:10px}
+  .qty button{width:28px; height:28px; border-radius:8px; border:none; background:#e5e7eb; cursor:pointer}
+
+  /* Product detail */
+  .pd-hero{border-radius:18px; overflow:hidden; box-shadow:var(--shadow); margin-bottom:12px}
+  .pd-box{background:#fff; border-radius:14px; box-shadow:var(--shadow); padding:14px; margin:10px 0}
+
+  /* Cart */
+  .row{display:flex; gap:10px}
+  .cart-item{background:#fff; border-radius:14px; box-shadow:var(--shadow); padding:10px; display:flex; gap:10px}
+  .cart-item img{width:86px; height:86px; border-radius:10px; object-fit:cover}
+  .totals{background:#fff; border-radius:14px; box-shadow:var(--shadow); padding:14px}
+  .totals .line{display:flex; justify-content:space-between; margin:6px 0}
+  .totals .grand{font-weight:900}
+  .payment-method{
+    padding: 10px; border: 1px solid #ddd; border-radius: 8px;
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  }
+  .payment-method input{margin:0;}
+
+  /* Profile */
+  .profile-card{background:#fff; border-radius:16px; box-shadow:var(--shadow); padding:16px}
+  .note{font-size:12px; color:var(--muted)}
+  .footer-note{margin-top:8px; color:#64748b}
+  .form-group{margin-bottom:12px}
+  .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #ccc}
+
+  /* Admin */
+  .admin-only{display:none}
+  .admin-bar{
+    position:sticky; top:0; z-index:11; background:#0b1220; color:#cbd5e1; padding:10px 14px; display:flex; gap:8px; align-items:center; border-bottom:1px solid rgba(255,255,255,.08)
+  }
+  .admin-pill{background:#111827; padding:8px 12px; border-radius:999px; cursor:pointer}
+  .admin-pill.active{background:#1f2937; color:#fff}
+  .table{width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; box-shadow:var(--shadow)}
+  .table th,.table td{padding:10px; border-bottom:1px solid #eee; font-size:13px; text-align:left}
+  .dash-cards{display:grid; grid-template-columns:repeat(2,1fr); gap:12px}
+  @media(min-width:880px){ .dash-cards{grid-template-columns:repeat(4,1fr)}}
+  .kpi{background:#fff;padding:14px;border-radius:14px;box-shadow:var(--shadow)}
+  .logo-preview{height:34px;width:34px;border-radius:8px;object-fit:cover;background:#fff}
+  .img-thumb{height:48px;width:64px;object-fit:cover;border-radius:8px}
+
+  /* Small helpers */
+  .sp-4{height:4px} .sp-8{height:8px} .sp-12{height:12px} .sp-16{height:16px}
+  .sr-only{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px)}
+  a{color:inherit}
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <div class="brand">
+    <img id="appLogo" alt="logo" />
+    <div><span id="brandFirst">Shei</span><span id="brandSecond">Mar</span></div>
+  </div>
+  <div class="search">
+    <input id="searchBox" placeholder="Search for products, categories…" />
+    <span class="icon">🔎</span>
+  </div>
+</header>
+
+<section id="admin" class="screen admin-only">
+  <div class="admin-bar">
+    <div class="admin-pill" data-admin="dashboard">📊 Dashboard</div>
+    <div class="admin-pill" data-admin="products">📦 Products</div>
+    <div class="admin-pill" data-admin="ads">🪧 Ads</div>
+    <div class="admin-pill" data-admin="orders">🧾 Orders</div>
+    <div class="admin-pill" data-admin="customers">👥 Customers</div>
+    <div class="admin-pill" data-admin="aboutus">ℹ️ About Us</div>
+    <div class="admin-pill" data-admin="settings">⚙️ Settings</div>
+    <div style="flex:1"></div>
+    <button id="adminLogout" class="btn light">Logout</button>
+  </div>
+
+  <div id="adminViews">
+    <div id="a-dashboard">
+      <h3>Overview</h3>
+      <div class="dash-cards">
+        <div class="kpi"><div class="muted">App Views</div><div id="kpiViews" style="font-weight:900;font-size:22px">0</div></div>
+        <div class="kpi"><div class="muted">Customers</div><div id="kpiCustomers" style="font-weight:900;font-size:22px">0</div></div>
+        <div class="kpi"><div class="muted">Orders</div><div id="kpiOrders" style="font-weight:900;font-size:22px">0</div></div>
+        <div class="kpi"><div class="muted">Profit (₹)</div><div id="kpiProfit" style="font-weight:900;font-size:22px">0</div></div>
+      </div>
+      <div class="sp-12"></div>
+      <div class="banner" style="background:linear-gradient(135deg,#0ea5e9,#22c55e)">
+        <h3>Quick Tips</h3>
+        <div class="muted">Use Products → Add Product to add a new item. Update app name & logo from Settings.</div>
+      </div>
+    </div>
+
+    <div id="a-products" style="display:none">
+      <h3>Products</h3>
+      <form id="prodForm" class="pd-box" onsubmit="return false;">
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="form-group"><label>Name</label><input id="pf_name" required></div>
+          <div class="form-group"><label>Category</label>
+            <select id="pf_cat"></select>
+          </div>
+          <div class="form-group"><label>Price (₹)</label><input id="pf_price" type="number" min="0" required></div>
+          <div class="form-group"><label>Cost (₹)</label><input id="pf_cost" type="number" min="0" value="0"></div>
+          <div class="form-group"><label>Colour</label><input id="pf_color" placeholder="e.g., Red/Blue/Black"></div>
+          <div class="form-group"><label>Image</label><input id="pf_img" type="file" accept="image/*"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Details</label><textarea id="pf_details" rows="3" placeholder="Short description"></textarea></div>
+        </div>
+        <div class="sp-8"></div>
+        <button id="pf_submit" class="btn success">Save Product</button>
+        <button id="pf_reset" class="btn light" type="button">Reset</button>
+        <input type="hidden" id="pf_id">
+      </form>
+
+      <div class="sp-12"></div>
+      <table class="table" id="prodTable">
+        <thead>
+          <tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Cost</th><th>Colour</th><th>Actions</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div id="a-ads" style="display:none">
+      <h3>Advertisements / Banners</h3>
+      <form id="adsForm" class="pd-box" onsubmit="return false;">
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="form-group"><label>Home Banner Title</label><input id="ad_home_title"></div>
+          <div class="form-group"><label>Home Banner Subtitle</label><input id="ad_home_sub"></div>
+          <div class="form-group"><label>Mid Banner Title</label><input id="ad_mid_title"></div>
+          <div class="form-group"><label>Mid Banner Subtitle</label><input id="ad_mid_sub"></div>
+        </div>
+        <div class="sp-8"></div>
+        <button id="ads_save" class="btn success">Save Ads</button>
+      </form>
+    </div>
+
+    <div id="a-orders" style="display:none">
+      <h3>Orders</h3>
+      <table class="table" id="ordersTable">
+        <thead><tr><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Profit</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div id="a-customers" style="display:none">
+      <h3>Customers</h3>
+      <table class="table" id="custTable">
+        <thead><tr><th>Name</th><th>Phone</th><th>First Seen</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div id="a-aboutus" style="display:none">
+      <h3>About Us Content</h3>
+      <form id="aboutForm" class="pd-box" onsubmit="return false;">
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="form-group"><label>Title</label><input id="ab_title" placeholder="About SheiMar"></div>
+          <div class="form-group"><label>Service Area</label><input id="ab_area" placeholder="Kashmir (Only)"></div>
+          <div class="form-group"><label>Customer Care (phone)</label><input id="ab_care" placeholder="+91 9797488873"></div>
+          <div class="form-group"><label>Email (optional)</label><input id="ab_email" placeholder="support@sheimar.com"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Mission</label><textarea id="ab_mission" rows="2" placeholder="Our mission…"></textarea></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Our Story</label><textarea id="ab_story" rows="3" placeholder="Short brand story…"></textarea></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Future Plans</label><textarea id="ab_future" rows="3" placeholder="What’s next…"></textarea></div>
+        </div>
+        <div class="sp-8"></div>
+        <button id="ab_save" class="btn success">Save About</button>
+      </form>
+    </div>
+
+    <div id="a-settings" style="display:none">
+      <h3>App Settings</h3>
+      <form id="setForm" class="pd-box" onsubmit="return false;">
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="form-group"><label>App First Word</label><input id="set_first" placeholder="Shei"></div>
+          <div class="form-group"><label>App Second Word</label><input id="set_second" placeholder="Mar"></div>
+          <div class="form-group"><label>Logo</label><input id="set_logo" type="file" accept="image/*"></div>
+          <div class="form-group"><label>WhatsApp Number</label><input id="set_wa" placeholder="e.g. 9797488873"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Instagram URL</label><input id="set_insta" placeholder="https://instagram.com/your_handle"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>YouTube URL</label><input id="set_yt" placeholder="https://youtube.com/channel/your_channel"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Facebook URL</label><input id="set_fb" placeholder="https://facebook.com/your_page"></div>
+        </div>
+        <div class="sp-8"></div>
+        <button id="set_save" class="btn success">Save Settings</button>
+      </form>
+    </div>
+  </div>
+</section>
+<main>
+  <section id="home" class="screen active">
+    <div class="banner">
+      <h3 id="homeBannerTitle">Big Festive Sale 🎉</h3>
+      <div id="homeBannerSub" class="muted">Fashion • Food • Grocery • More — everything in one app</div>
+    </div>
+
+    <div class="hstack" id="homeChips"></div>
+    <div class="sp-8"></div>
+
+    <h3>Best Sellers</h3>
+    <div id="homeGrid" class="grid"></div>
+
+    <div class="sp-12"></div>
+    <div class="banner" style="background:linear-gradient(135deg,#0ea5e9,#22c55e)">
+      <h3 id="midBannerTitle">Bakery Delights 🧁</h3>
+      <div id="midBannerSub" class="muted">Fresh cakes, pastries & breads daily</div>
+    </div>
+
+    <h3>New Arrivals</h3>
+    <div id="newGrid" class="grid"></div>
+  </section>
+
+  <section id="categories" class="screen">
+    <div class="banner"><h3>Shop by Category</h3><div class="muted">Tap a category to explore</div></div>
+    <div id="catChips" class="hstack"></div>
+    <div class="sp-8"></div>
+    <div id="catGrid" class="grid"></div>
+  </section>
+
+  <section id="detail" class="screen">
+    <div id="pdWrap"></div>
+  </section>
+
+  <section id="cart" class="screen">
+    <h3>Your Cart</h3>
+    <div id="cartList"></div>
+    <div class="sp-12"></div>
+    <div id="cartTotals" class="totals" style="display:none"></div>
+  </section>
+
+  <section id="profile" class="screen">
+    <div class="profile-card" id="profileContent"></div>
+  </section>
+
+  <section id="about" class="screen">
+    <div class="banner">
+      <h3 id="ab_view_title">About SheiMar</h3>
+      <div class="muted" id="ab_view_area">Serving Kashmir (Only)</div>
+    </div>
+    <div class="pd-box">
+      <h3>Our Mission</h3>
+      <div id="ab_view_mission" class="muted"></div>
+    </div>
+    <div class="pd-box">
+      <h3>Our Story</h3>
+      <div id="ab_view_story" class="muted"></div>
+    </div>
+    <div class="pd-box">
+      <h3>Future Plans for Kashmir</h3>
+      <ul id="ab_view_future" class="muted" style="padding-left:18px"></ul>
+    </div>
+    <div class="pd-box">
+      <h3>Customer Care</h3>
+      <div class="muted">Phone: <a id="ab_view_care" href="#" target="_blank"></a></div>
+      <div class="muted">Email: <span id="ab_view_email">-</span></div>
+      <div class="sp-8"></div>
+      <button id="ab_view_whatsapp" class="btn success">Chat on WhatsApp</button>
+    </div>
+  </section>
+
+  <section id="company-details" class="screen">
+    <div class="banner">
+      <h3 id="cd-title">SheiMar</h3>
+      <div id="cd-subtitle" class="muted">Your local online store.</div>
+    </div>
+    <div class="pd-box">
+      <h4>Our Social Media</h4>
+      <div class="hstack" style="justify-content:center; flex-wrap:wrap">
+        <a id="cd-insta-btn" class="btn light" target="_blank" style="display:none;">📸 Instagram</a>
+        <a id="cd-yt-btn" class="btn light" target="_blank" style="display:none;">▶️ YouTube</a>
+        <a id="cd-fb-btn" class="btn light" target="_blank" style="display:none;">👍 Facebook</a>
+      </div>
+    </div>
+    <div class="sp-12"></div>
+    <div id="adminOpen" class="admin-link" style="text-align:center;">⚙️ Admin Panel</div>
+    <div class="sp-8"></div>
+    <button id="cd-back-btn" class="btn light block">Back to Home</button>
+  </section>
+</main>
+
+<nav class="tabs">
+  <div class="tab" data-tab="home">🏠<div>Home</div></div>
+  <div class="tab" data-tab="categories">🗂️<div>Categories</div></div>
+  <div class="tab" data-tab="about">ℹ️<div>About</div></div>
+  <div class="tab" data-tab="cart">
+    <div class="tab-wrap">🛒<span id="cartBadge" class="badge" style="display:none">0</span></div>
+    <div>Cart</div>
+  </div>
+  <div class="tab" data-tab="profile">👤<div>Profile</div></div>
+</nav>
+
+<div id="adminModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:50; align-items:center; justify-content:center;">
+  <div style="background:#fff; width:min(520px,92vw); border-radius:16px; padding:18px; box-shadow:var(--shadow)">
+    <h3>Admin Login</h3>
+    <div class="sp-8"></div>
+    <div class="form-group"><label>Email</label><input id="ad_email" placeholder="Email"></div>
+    <div class="form-group"><label>Password</label><input id="ad_pass" type="password" placeholder="Password"></div>
+    <div class="sp-8"></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end">
+      <button id="ad_cancel" class="btn light">Cancel</button>
+      <button id="ad_login" class="btn primary">Login</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- CONSTANTS ---------- */
+const ADMIN_EMAIL = "aamirnisar6027@gmail.com";
+const ADMIN_PASS = "aamir@2556";
+
+/* ---------- DEFAULT DATA ---------- */
+const DEFAULT_CATS = [
+  {name: "Clothing", icon: "👕"},
+  {name: "Women Sportswear", icon: "🏋️‍♀️"},
+  {name: "Bakery", icon: "🎂"},
+  {name: "Fast Food", icon: "🍔"},
+  {name: "Disposables", icon: "🥤"},
+  {name: "Cold Drinks", icon: "🥤"},
+  {name: "Grocery", icon: "🛒"}
+];
+
+const DEFAULT_PRODUCTS = [
+  {id:"p1", name:"Men Cotton T-Shirt", price:499, cost:250, cat:"Clothing", color:"Navy", details:"Soft cotton tee",
+   img:"https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format&fit=crop"},
+  {id:"p2", name:"Boys Denim Jacket", price:1299, cost:800, cat:"Clothing", color:"Blue", details:"Classic denim",
+   img:"https://images.unsplash.com/photo-1548883354-7622d03aca29?q=80&w=800&auto=format&fit=crop"},
+  {id:"p3", name:"Kids Printed Tee", price:399, cost:180, cat:"Clothing", color:"White", details:"Fun print",
+   img:"https://images.unsplash.com/photo-1618354691238-7c3a9affd1c3?q=80&w=800&auto=format&fit=crop"},
+  {id:"p4", name:"Women Running Tee", price:699, cost:300, cat:"Women Sportswear", color:"Pink", details:"Quick-dry",
+   img:"https://images.unsplash.com/photo-1520975922284-7b683b6b2f71?q=80&w=800&auto=format&fit=crop"},
+  {id:"p5", name:"Yoga Leggings", price:899, cost:450, cat:"Women Sportswear", color:"Black", details:"Stretch fit",
+   img:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=800&auto=format&fit=crop"},
+  {id:"p6", name:"Chocolate Truffle Cake 1kg", price:899, cost:550, cat:"Bakery", color:"Brown", details:"Fresh & rich",
+   img:"https://images.unsplash.com/photo-1542826438-bd32f43d626f?q=80&w=800&auto=format&fit=crop"},
+  {id:"p7", name:"Fresh Croissant (6 pc)", price:299, cost:160, cat:"Bakery", color:"Golden", details:"Buttery & flaky",
+   img:"https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=800&auto=format&fit=crop"},
+  {id:"p8", name:"Chicken Burger Combo", price:249, cost:140, cat:"Fast Food", color:"Mixed", details:"Burger + Fries",
+   img:"https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=800&auto=format&fit=crop"},
+  {id:"p9", name:"Loaded Fries", price:159, cost:80, cat:"Fast Food", color:"Golden", details:"Cheesy loaded fries",
+   img:"https://images.unsplash.com/photo-1550547660-967f0b0f7d9d?q=80&w=800&auto=format&fit=crop"},
+  {id:"p10", name:"Paper Cups (100 pc)", price:199, cost:120, cat:"Disposables", color:"White", details:"Eco-friendly",
+   img:"https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=800&auto=format&fit=crop"},
+  {id:"p11", name:"Food Containers (20 pc)", price:249, cost:160, cat:"Disposables", color:"Clear", details:"Microwave-safe",
+   img:"https://images.unsplash.com/photo-1617104072698-0db1f2fd56a3?q=80&w=800&auto=format&fit=crop"},
+  {id:"p12", name:"Cola 2L", price:99, cost:70, cat:"Cold Drinks", color:"Brown", details:"Chilled",
+   img:"https://images.unsplash.com/photo-1572297583-0ae6a4bb0980?q=80&w=800&auto=format&fit=crop"},
+  {id:"p13", name:"Orange Juice 1L", price:129, cost:85, cat:"Cold Drinks", color:"Orange", details:"100% juice",
+   img:"https://images.unsplash.com/photo-1542444459-db63c5a9c5a1?q=80&w=800&auto=format&fit=crop"},
+  {id:"p14", name:"Basmati Rice 5kg", price:549, cost:390, cat:"Grocery", color:"White", details:"Long grain",
+   img:"https://images.unsplash.com/photo-1604908554027-572ec0f6a4d1?q=80&w=800&auto=format&fit=crop"},
+  {id:"p15", name:"Sunflower Oil 1L", price:149, cost:110, cat:"Grocery", color:"Yellow", details:"Refined",
+   img:"https://images.unsplash.com/photo-1603048297172-c92544798c59?q=80&w=800&auto=format&fit=crop"},
+];
+
+/* ---------- STATE & STORAGE ---------- */
+const STATE = {
+  tab:"home",
+  search:"",
+  category:null,
+  cart: load("sheimar_cart", []),
+  customerDetails: load("sheimar_customer", {}),
+  isLoggedIn: !!load("sheimar_customer", {}).name,
+  admin:false,
+  adminView:"dashboard",
+};
+
+const STORE_KEYS = {
+  products: "sheimar_products",
+  categories: "sheimar_categories",
+  ads: "sheimar_ads",
+  settings: "sheimar_settings",
+  orders: "sheimar_orders",
+  customers: "sheimar_customers",
+  views: "sheimar_views",
+  about: "sheimar_about"
+};
+
+function load(key, fallback){
+  try{ return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+  catch{ return fallback }
+}
+function save(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+
+function bootOnce(){
+  if(!localStorage.getItem(STORE_KEYS.products)) save(STORE_KEYS.products, DEFAULT_PRODUCTS);
+  if(!localStorage.getItem(STORE_KEYS.categories)) save(STORE_KEYS.categories, DEFAULT_CATS);
+  if(!localStorage.getItem(STORE_KEYS.ads)) save(STORE_KEYS.ads, {
+    homeTitle:"Big Festive Sale 🎉",
+    homeSub:"Fashion • Food • Grocery • More — everything in one app",
+    midTitle:"Bakery Delights 🧁",
+    midSub:"Fresh cakes, pastries & breads daily"
+  });
+  if(!localStorage.getItem(STORE_KEYS.settings)) save(STORE_KEYS.settings, {
+    first:"Shei", second:"Mar", logo:null, whatsapp:"919797488873",
+    instagram: "https://www.instagram.com/sheikh_aamir_nisar_/",
+    youtube: "https://www.youtube.com/@sheikhaamirnisar",
+    facebook: "https://www.facebook.com/sheikh.aamir.nisar.5/"
+  });
+  if(!localStorage.getItem(STORE_KEYS.orders)) save(STORE_KEYS.orders, []);
+  if(!localStorage.getItem(STORE_KEYS.customers)) save(STORE_KEYS.customers, []);
+  if(!localStorage.getItem(STORE_KEYS.about)) save(STORE_KEYS.about, {
+    title: "About SheiMar",
+    area: "Serving Kashmir (Only)",
+    mission: "To bring reliable, fast, and friendly online shopping to every corner of Kashmir—covering fashion, food, bakery, and daily groceries—with transparent pricing and doorstep delivery.",
+    story: "SheiMar started with a simple idea: one local app, many essentials. We work with Kashmir-based sellers so customers get fresh products faster and businesses grow within the valley.",
+    future: [
+      "Add 1-hour express delivery in selected Srinagar areas",
+      "Onboard more local artisans & bakery partners",
+      "In-app order tracking & digital payments",
+      "Community deals for students and families"
+    ],
+    care: "+91 97974 88873",
+    email: "support@sheimar.com"
+  });
+  const v = (parseInt(localStorage.getItem(STORE_KEYS.views)||"0")+1);
+  localStorage.setItem(STORE_KEYS.views, String(v));
+}
+
+/* ---------- HELPERS ---------- */
+function qs(sel){return document.querySelector(sel)}
+function el(tag,attrs={},children=[]){
+  const e=document.createElement(tag);
+  Object.entries(attrs).forEach(([k,v])=>{
+    if(k==="class") e.className=v;
+    else if(k==="html") e.innerHTML=v;
+    else e.setAttribute(k,v);
+  });
+  children.forEach(c=>e.appendChild(c));
+  return e;
+}
+function formatINR(n){ return "₹ " + Number(n||0).toLocaleString("en-IN"); }
+function uid(){ return "p"+Math.random().toString(36).slice(2,9); }
+function readFileAsDataURL(file){
+  return new Promise((res,rej)=>{
+    const fr = new FileReader();
+    fr.onload = ()=>res(fr.result);
+    fr.onerror = rej;
+    fr.readAsDataURL(file);
+  });
+}
+
+/* ---------- CUSTOMER STORAGE (Cart & Customer Details) ---------- */
+function saveCart(){
+  save("sheimar_cart", STATE.cart);
+  updateCartBadge();
+}
+function saveCustomerDetails(name, phone){
+  STATE.customerDetails = { name, phone, firstSeen: new Date().toISOString() };
+  save("sheimar_customer", STATE.customerDetails);
+  STATE.isLoggedIn = true;
+
+  // also push to customers list if new
+  const customers = load(STORE_KEYS.customers, []);
+  if(!customers.find(c=>c.phone===phone)){
+    customers.push({name, phone, firstSeen: new Date().toISOString()});
+    save(STORE_KEYS.customers, customers);
+  }
+}
+function logout(){
+  localStorage.removeItem("sheimar_customer");
+  STATE.customerDetails = {};
+  STATE.isLoggedIn = false;
+  toast("Logged out successfully! 👋");
+  renderProfile();
+}
+
+/* ---------- UI: Tabs / Navigation ---------- */
+function show(tab){
+  STATE.tab = tab;
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  qs("#"+tab).classList.add("active");
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active", t.dataset.tab===tab));
+  if(tab==="home"){ renderHome(); }
+  if(tab==="categories"){ renderCategories(); }
+  if(tab==="cart"){ renderCart(); }
+  if(tab==="profile"){ renderProfile(); }
+  if(tab==="about"){ renderAbout(); }
+  if(tab==="company-details"){ renderCompanyDetails(); }
+  if(tab==="admin"){ renderAdminView(STATE.adminView); }
+}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click", ()=>show(t.dataset.tab)));
+qs(".brand").addEventListener("click", () => show("company-details"));
+
+/* ---------- UI: Toast ---------- */
+let toastTimer=null;
+function toast(msg){
+  let t=qs("#toast");
+  if(!t){
+    t = el("div",{id:"toast", class:"banner", style:"position:fixed;left:14px;right:14px;bottom:80px;z-index:50;text-align:center"});
+    document.body.appendChild(t);
+  }
+  t.innerText = msg;
+  t.style.display="block";
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.style.display="none",1400);
+}
+
+/* ---------- CATALOG ACCESSORS ---------- */
+function getProducts(){ return load(STORE_KEYS.products, []); }
+function setProducts(arr){ save(STORE_KEYS.products, arr); }
+function getCats(){ return load(STORE_KEYS.categories, DEFAULT_CATS); }
+function getAds(){ return load(STORE_KEYS.ads, {}); }
+function setAds(a){ save(STORE_KEYS.ads, a); }
+function getSettings(){ return load(STORE_KEYS.settings, {}); }
+function setSettings(s){ save(STORE_KEYS.settings, s); }
+function getOrders(){ return load(STORE_KEYS.orders, []); }
+function setOrders(o){ save(STORE_KEYS.orders, o); }
+function getCustomers(){ return load(STORE_KEYS.customers, []); }
+function getAbout(){ return load(STORE_KEYS.about, {}); }
+function setAbout(a){ save(STORE_KEYS.about, a); }
+
+/* ---------- SHOP RENDERERS ---------- */
+function productCard(p){
+  const card = el("div",{class:"card"});
+  card.appendChild(el("img",{src:p.img,alt:p.name,loading:"lazy"}));
+  const pad = el("div",{class:"p"});
+  const catIcon = getCats().find(c => c.name === p.cat)?.icon || '';
+  pad.appendChild(el("div",{class:"title",html:p.name}));
+  pad.appendChild(el("div",{class:"muted",html:`${catIcon} ${p.cat} ${p.color ? "• "+p.color:""}`}));
+  pad.appendChild(el("div",{class:"price",html:formatINR(p.price)}));
+  const actions = el("div",{style:"display:flex;gap:8px;margin-top:8px; flex-wrap:wrap"});
+  const buyBtn = el("button",{class:"btn primary",html:"Buy Now"});
+  const addBtn = el("button",{class:"btn success",html:"Add to Cart"},[]);
+  buyBtn.onclick = ()=> buySingleProduct(p.id);
+  addBtn.onclick = ()=> addToCart(p.id,1);
+  actions.append(buyBtn,addBtn);
+  pad.appendChild(actions);
+  card.appendChild(pad);
+  return card;
+}
+
+function renderHome(){
+  // set brand & ads
+  const sets = getSettings();
+  qs("#brandFirst").textContent = sets.first || "Shei";
+  qs("#brandSecond").textContent = sets.second || "Mar";
+  qs("#appLogo").src = sets.logo || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%' height='100%' fill='white'/><text x='50%' y='55%' text-anchor='middle' font-size='28' font-family='Arial' fill='%230f172a'>S</text></svg>";
+  const ads = getAds();
+  qs("#homeBannerTitle").textContent = ads.homeTitle || "Big Festive Sale 🎉";
+  qs("#homeBannerSub").textContent = ads.homeSub || "Everything in one app";
+  qs("#midBannerTitle").textContent = ads.midTitle || "Bakery Delights 🧁";
+  qs("#midBannerSub").textContent = ads.midSub || "Fresh cakes, pastries & breads daily";
+
+  // chips
+  const chipWrap = qs("#homeChips"); chipWrap.innerHTML="";
+  getCats().forEach(c=>{
+    const chip = el("div",{class:"chip",html:`${c.icon} ${c.name}`});
+    chip.onclick = ()=>{ STATE.category=c.name; show("categories"); };
+    chipWrap.appendChild(chip);
+  });
+
+  // best sellers (first 8)
+  const search = STATE.search.trim().toLowerCase();
+  const list = getProducts();
+  const best = list.filter(p=>!search || p.name.toLowerCase().includes(search) || p.cat.toLowerCase().includes(search)).slice(0,8);
+  const grid = qs("#homeGrid"); grid.innerHTML="";
+  best.forEach(p=>grid.appendChild(productCard(p)));
+
+  // new arrivals (last 8)
+  const news = list.slice(-8);
+  const ngrid = qs("#newGrid"); ngrid.innerHTML="";
+  news.forEach(p=>ngrid.appendChild(productCard(p)));
+}
+
+function renderCategories(){
+  const wrap = qs("#catChips"); wrap.innerHTML="";
+  const allChip = el("div",{class:"chip",html:"🗂️ All Categories"});
+  allChip.onclick = ()=>{ STATE.category=null; renderCategories(); };
+  if(!STATE.category) allChip.style.background="#dbeafe";
+  wrap.appendChild(allChip);
+
+  getCats().forEach(c=>{
+    const chip = el("div",{class:"chip",html:`${c.icon} ${c.name}`});
+    chip.onclick = ()=>{ STATE.category=c.name; renderCategories(); };
+    if(STATE.category===c.name) chip.style.background="#dbeafe";
+    wrap.appendChild(chip);
+  });
+
+  const grid = qs("#catGrid"); grid.innerHTML="";
+  const list = getProducts().filter(p=> !STATE.category || p.cat===STATE.category);
+  list.forEach(p=>grid.appendChild(productCard(p)));
+}
+
+function buySingleProduct(id) {
+    const p = getProducts().find(x => x.id === id);
+    if (!p) return;
+    const W = qs("#pdWrap"); W.innerHTML = "";
+    const img = el("img", { src: p.img, alt: p.name, loading: "lazy" });
+    const hero = el("div", { class: "pd-hero" }, [img]);
+
+    const box1 = el("div", { class: "pd-box" });
+    box1.appendChild(el("h3", { html: p.name }));
+    const catIcon = getCats().find(c => c.name === p.cat)?.icon || '';
+    box1.appendChild(el("div", { class: "muted", html: `${catIcon} ${p.cat} • ${p.color||""}` }));
+    box1.appendChild(el("div", { class: "price", html: formatINR(p.price) }));
+    if(p.details) box1.appendChild(el("div", { class: "muted", html: p.details }));
+
+    const box2 = el("div", { class: "pd-box" });
+    box2.appendChild(el("div", { html: "Quality assured • 3-day return • Free delivery over " + formatINR(499) }));
+
+    const paymentBox = el("div", { class: "pd-box" });
+    paymentBox.innerHTML = `
+        <div class="payment-method">
+            <input type="radio" id="cod" name="payment" value="Cash on Delivery" checked>
+            <label for="cod">Cash on Delivery</label>
+        </div>
+    `;
+
+    const actions = el("div", { style: "display:flex;gap:10px;margin-top:10px" });
+    const buy = el("button", { class: "btn primary block", html: "Buy Now on WhatsApp" });
+    buy.onclick = () => {
+        const paymentMethod = "Cash on Delivery";
+        buyNowOnWhatsApp([{ ...p, qty: 1 }], paymentMethod);
+    };
+    actions.append(buy);
+
+    W.append(hero, box1, box2, paymentBox, actions);
+    show("detail");
+}
+
+function renderCart(){
+  const list = qs("#cartList"); list.innerHTML="";
+  if(STATE.cart.length===0){
+    list.innerHTML = `<div class="banner" style="background:#fff;color:#111"><strong>Your cart is empty.</strong><div class="muted">Start shopping from Home or Categories.</div></div>`;
+    qs("#cartTotals").style.display="none";
+    updateCartBadge();
+    return;
+  }
+
+  STATE.cart.forEach(it=>{
+    const p = getProducts().find(x=>x.id===it.id); if(!p) return;
+    const row = el("div",{class:"cart-item"});
+    row.appendChild(el("img",{src:p.img,alt:p.name,loading:"lazy"}));
+    const info = el("div",{style:"flex:1"});
+    info.appendChild(el("div",{class:"title",html:p.name}));
+    info.appendChild(el("div",{class:"price",html:formatINR(p.price)}));
+    const ctl = el("div",{class:"row",style:"justify-content:space-between;align-items:center"});
+    const qty = el("div",{class:"qty"});
+    const minus = el("button",{html:"−"}), plus = el("button",{html:"＋"});
+    const n = el("span",{html:it.qty});
+    minus.onclick = ()=>{ setQty(it.id, it.qty-1); };
+    plus.onclick = ()=>{ setQty(it.id, it.qty+1); };
+    qty.append(minus,n,plus);
+    const del = el("button",{class:"btn light",html:"Remove"});
+    del.onclick = ()=> removeFromCart(it.id);
+    ctl.append(qty,del);
+    info.appendChild(ctl);
+    row.appendChild(info);
+    list.appendChild(row);
+  });
+
+  const totals = qs("#cartTotals");
+  const mrp = STATE.cart.reduce((s,it)=>{
+    const p = getProducts().find(x=>x.id===it.id); return s + p.price*it.qty;
+  },0);
+  const shipping = mrp >= 499 || mrp===0 ? 0 : 49;
+  const discount = mrp>1500 ? 150 : 0;
+  const grand = Math.max(0, mrp + shipping - discount);
+
+  totals.innerHTML = `
+    <div class="line"><span>Items Total</span><strong>${formatINR(mrp)}</strong></div>
+    <div class="line"><span>Shipping</span><strong>${shipping?formatINR(shipping):"Free"}</strong></div>
+    <div class="line"><span>Discount</span><strong>− ${formatINR(discount)}</strong></div>
+    <hr/>
+    <div class="line grand"><span>Grand Total</span><span>${formatINR(grand)}</span></div>
+    <div class="sp-8"></div>
+    <div class="payment-method">
+        <input type="radio" id="cod" name="payment" value="Cash on Delivery" checked>
+        <label for="cod">Cash on Delivery</label>
+    </div>
+    <button class="btn success block" id="checkoutBtn">Buy Now on WhatsApp</button>
+  `;
+  totals.style.display="block";
+  qs("#checkoutBtn").onclick = () => {
+    const paymentMethod = "Cash on Delivery";
+    const cartProducts = STATE.cart.map(item => {
+      const product = getProducts().find(p => p.id === item.id);
+      return { ...product, qty: item.qty };
+    });
+    buyNowOnWhatsApp(cartProducts, paymentMethod);
+  };
+  updateCartBadge();
+}
+
+function renderProfile(){
+  const content = qs("#profileContent");
+  content.innerHTML = "";
+
+  if(STATE.isLoggedIn) {
+    content.innerHTML = `
+      <h3>Welcome, ${STATE.customerDetails.name}! 👋</h3>
+      <div class="sp-8"></div>
+      <div class="form-group">
+        <label>Name:</label>
+        <input type="text" value="${STATE.customerDetails.name}" disabled />
+      </div>
+      <div class="form-group">
+        <label>Phone Number:</label>
+        <input type="tel" value="${STATE.customerDetails.phone}" disabled />
+      </div>
+      <div class="sp-12"></div>
+      <button class="btn light block" id="logoutBtn">Log Out</button>
+      <div class="sp-8"></div>
+      <button class="btn primary block" id="gotoAboutBtn">About SheiMar</button>
+      <p class="footer-note">Owner: <strong>Sheikh Aamir Nisar</strong></p>
+    `;
+    qs("#logoutBtn").onclick = logout;
+    qs("#gotoAboutBtn").onclick = ()=>show("about");
+  } else {
+    content.innerHTML = `
+      <h3>Login / Sign Up</h3>
+      <p class="note">Enter your details to place an order.</p>
+      <div class="sp-8"></div>
+      <div class="form-group">
+        <label for="customerName" class="sr-only">Your Name</label>
+        <input type="text" id="customerName" placeholder="Your Name" />
+      </div>
+      <div class="form-group">
+        <label for="customerPhone" class="sr-only">Your Phone Number</label>
+        <input type="tel" id="customerPhone" placeholder="Your Phone Number" />
+      </div>
+      <div class="sp-8"></div>
+      <button class="btn success block" id="loginBtn">Log In</button>
+      <div class="sp-8"></div>
+      <button class="btn primary block" id="gotoAboutBtn">About SheiMar</button>
+      <p class="footer-note">Owner: <strong>Sheikh Aamir Nisar</strong></p>
+    `;
+    qs("#loginBtn").onclick = handleLogin;
+    qs("#gotoAboutBtn").onclick = ()=>show("about");
+  }
+}
+
+function handleLogin() {
+    const name = qs("#customerName").value.trim();
+    const phone = qs("#customerPhone").value.trim();
+    if (name && phone) {
+        saveCustomerDetails(name, phone);
+        toast("Logged in successfully! ✅");
+        renderProfile();
+    } else {
+        toast("Please enter both your name and phone number.");
+    }
+}
+
+function updateCartBadge(){
+  const qty = STATE.cart.reduce((s,i)=>s+i.qty,0);
+  const b = qs("#cartBadge");
+  if(qty>0){ b.style.display="inline-block"; b.textContent = qty; }
+  else{ b.style.display="none"; }
+}
+
+/* ---------- CART OPS ---------- */
+function loadCart(){ return load("sheimar_cart", []); }
+function addToCart(id,qty=1){
+  const idx = STATE.cart.findIndex(i=>i.id===id);
+  if(idx>-1){ STATE.cart[idx].qty += qty; }
+  else{ STATE.cart.push({id,qty}); }
+  saveCart();
+  toast("Added to cart 🛒");
+}
+function setQty(id,qty){
+  const item = STATE.cart.find(i=>i.id===id);
+  if(!item) return;
+  item.qty = Math.max(1, qty);
+  saveCart(); renderCart();
+}
+function removeFromCart(id){
+  STATE.cart = STATE.cart.filter(i=>i.id!==id);
+  saveCart(); renderCart();
+}
+
+/* ---------- WHATSAPP ORDER + ORDER CAPTURE ---------- */
+function buyNowOnWhatsApp(productsToBuy, paymentMethod) {
+  if (!STATE.isLoggedIn) {
+    toast("Please log in or sign up in the Profile tab first.");
+    show("profile");
+    return;
+  }
+  const sets = getSettings();
+  const whatsapp = sets.whatsapp || "919797488873";
+  const name = STATE.customerDetails.name;
+  const phone = STATE.customerDetails.phone;
+
+  let totalAmount = 0;
+  let totalCost = 0;
+  productsToBuy.forEach(product => {
+    const itemTotal = product.price * (product.qty || 1);
+    const itemCost = (product.cost||0) * (product.qty || 1);
+    totalAmount += itemTotal;
+    totalCost += itemCost;
+  });
+  const shipping = totalAmount >= 499 ? 0 : 49;
+  const grandTotal = totalAmount + shipping;
+  const profit = (totalAmount - totalCost);
+
+  // Save order to localStorage
+  const orders = getOrders();
+  orders.push({
+    id: "o"+Date.now(),
+    date: new Date().toISOString(),
+    customer: {name, phone},
+    items: productsToBuy.map(p=>({id:p.id, name:p.name, price:p.price, cost:p.cost||0, qty:p.qty||1})),
+    total: grandTotal,
+    profit
+  });
+  setOrders(orders);
+
+  // Build WhatsApp message
+  let message = `Hello ${sets.first||"Shei"}${sets.second||"Mar"}! I would like to place an order.%0A%0A`;
+  message += `*Customer Details:*%0A`;
+  message += `Name: ${encodeURIComponent(name)}%0A`;
+  message += `Phone: ${encodeURIComponent(phone)}%0A`;
+  message += `Payment Method: ${encodeURIComponent(paymentMethod)}%0A%0A`;
+  message += `*Order Details:*%0A`;
+
+  productsToBuy.forEach(product => {
+    const itemTotal = product.price * (product.qty || 1);
+    message += `- ${encodeURIComponent(product.name)}%0A`;
+    message += `  Price: ₹${product.price} x ${product.qty || 1}%0A`;
+    message += `  Total: ₹${itemTotal}%0A`;
+  });
+
+  message += `%0A*Final Amount:*%0A`;
+  message += `Subtotal: ₹${totalAmount}%0A`;
+  message += `Shipping: ₹${shipping}%0A`;
+  message += `*Grand Total: ₹${grandTotal}*%0A%0A`;
+  message += `Please confirm my order. Thank you!`;
+
+  const whatsappURL = `https://wa.me/${whatsapp}?text=${message}`;
+  window.open(whatsappURL, '_blank');
+
+  // clear cart after order
+  STATE.cart = [];
+  saveCart();
+  renderCart();
+  toast("Order sent on WhatsApp ✅");
+}
+
+/* ---------- ABOUT (Customer-facing) ---------- */
+function renderAbout(){
+  const a = getAbout();
+  qs("#ab_view_title").textContent = a.title || "About SheiMar";
+  qs("#ab_view_area").textContent = a.area || "Serving Kashmir (Only)";
+  qs("#ab_view_mission").textContent = a.mission || "";
+  qs("#ab_view_story").textContent = a.story || "";
+
+  const list = qs("#ab_view_future"); list.innerHTML = "";
+  const arr = Array.isArray(a.future) ? a.future : (String(a.future||"").split("\n").filter(Boolean));
+  arr.forEach(x=>{
+    const li = document.createElement("li");
+    li.textContent = x;
+    list.appendChild(li);
+  });
+
+  // Customer care (link to tel and WhatsApp)
+  const careEl = qs("#ab_view_care");
+  const careText = a.care || "+91 97974 88873";
+  careEl.textContent = careText;
+  careEl.href = `tel:${careText.replace(/\s|\+/g,"")}`;
+
+  qs("#ab_view_email").textContent = a.email || "-";
+
+  const waBtn = qs("#ab_view_whatsapp");
+  const sets = getSettings();
+  const wa = (sets.whatsapp || "919797488873");
+  waBtn.onclick = ()=>{
+    const msg = encodeURIComponent("Hello SheiMar support! I need help with my order.");
+    window.open(`https://wa.me/${wa}?text=${msg}`, "_blank");
+  };
+}
+
+/* NEW: RENDER COMPANY DETAILS PAGE */
+function renderCompanyDetails() {
+  const sets = getSettings();
+  const instaBtn = qs("#cd-insta-btn");
+  const ytBtn = qs("#cd-yt-btn");
+  const fbBtn = qs("#cd-fb-btn");
+
+  if(sets.instagram) {
+    instaBtn.href = sets.instagram;
+    instaBtn.style.display = "inline-block";
+  } else {
+    instaBtn.style.display = "none";
+  }
+  if(sets.youtube) {
+    ytBtn.href = sets.youtube;
+    ytBtn.style.display = "inline-block";
+  } else {
+    ytBtn.style.display = "none";
+  }
+  if(sets.facebook) {
+    fbBtn.href = sets.facebook;
+    fbBtn.style.display = "inline-block";
+  } else {
+    fbBtn.style.display = "none";
+  }
+
+  qs("#cd-back-btn").onclick = () => show("home");
+  qs("#adminOpen").onclick = () => {
+    adminModal.style.display="flex";
+    qs("#ad_email").value="";
+    qs("#ad_pass").value="";
+  };
+}
+
+
+/* ---------- ADMIN: AUTH & NAV ---------- */
+const adminModal = qs("#adminModal");
+qs("#ad_cancel").onclick = ()=> adminModal.style.display = "none";
+
+qs("#ad_login").onclick = ()=>{
+  const e = qs("#ad_email").value.trim();
+  const p = qs("#ad_pass").value.trim();
+  if(e===ADMIN_EMAIL && p===ADMIN_PASS){
+    STATE.admin = true;
+    adminModal.style.display="none";
+    qs("#admin").classList.remove("admin-only");
+    STATE.tab="admin";
+    show("admin");
+    toast("Welcome Admin! 🔐");
+  } else {
+    toast("Invalid credentials");
+  }
+};
+
+qs("#adminLogout").onclick = ()=>{
+  STATE.admin = false;
+  qs("#admin").classList.add("admin-only");
+  show("home");
+  toast("Admin logged out");
+};
+
+document.querySelectorAll(".admin-pill").forEach(p=>{
+  p.addEventListener("click", ()=>{
+    document.querySelectorAll(".admin-pill").forEach(x=>x.classList.remove("active"));
+    p.classList.add("active");
+    STATE.adminView = p.dataset.admin;
+    renderAdminView(STATE.adminView);
+  });
+});
+
+/* ---------- ADMIN: RENDER VIEWS ---------- */
+function renderAdminView(view){
+  // show admin section
+  qs("#admin").classList.add("active");
+  // pills active
+  document.querySelectorAll(".admin-pill").forEach(x=>x.classList.toggle("active", x.dataset.admin===view));
+  // toggle sub-views
+  ["dashboard","products","ads","orders","customers","aboutus","settings"].forEach(v=>{
+    qs("#a-"+v).style.display = (v===view) ? "block" : "none";
+  });
+
+  if(view==="dashboard") renderDash();
+  if(view==="products") renderProductsAdmin();
+  if(view==="ads") renderAdsAdmin();
+  if(view==="orders") renderOrdersAdmin();
+  if(view==="customers") renderCustomersAdmin();
+  if(view==="aboutus") renderAboutAdmin();
+  if(view==="settings") renderSettingsAdmin();
+}
+
+/* DASHBOARD */
+function renderDash(){
+  qs("#kpiViews").innerText = localStorage.getItem(STORE_KEYS.views) || "0";
+  qs("#kpiCustomers").innerText = String(getCustomers().length);
+  const orders = getOrders();
+  qs("#kpiOrders").innerText = String(orders.length);
+  const profit = orders.reduce((s,o)=>s+(o.profit||0),0);
+  qs("#kpiProfit").innerText = Number(profit).toLocaleString("en-IN");
+}
+
+/* PRODUCTS ADMIN */
+function renderProductsAdmin(){
+  // fill cat select
+  const sel = qs("#pf_cat"); sel.innerHTML="";
+  getCats().forEach(c=>{
+    const op = document.createElement("option");
+    op.value = c.name; op.textContent = c.name;
+    sel.appendChild(op);
+  });
+
+  // table
+  const tbody = qs("#prodTable tbody"); tbody.innerHTML="";
+  getProducts().forEach(p=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><img class="img-thumb" src="${p.img}"/></td>
+      <td>${p.name}</td>
+      <td>${p.cat}</td>
+      <td>${formatINR(p.price)}</td>
+      <td>${formatINR(p.cost||0)}</td>
+      <td>${p.color||"-"}</td>
+      <td>
+        <button class="btn light" data-edit="${p.id}">Edit</button>
+        <button class="btn danger" data-del="${p.id}">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // actions
+  tbody.querySelectorAll("[data-edit]").forEach(b=>{
+    b.onclick = ()=>{
+      const id = b.getAttribute("data-edit");
+      const p = getProducts().find(x=>x.id===id);
+      if(!p) return;
+      qs("#pf_id").value = p.id;
+      qs("#pf_name").value = p.name;
+      qs("#pf_cat").value = p.cat;
+      qs("#pf_price").value = p.price;
+      qs("#pf_cost").value = p.cost||0;
+      qs("#pf_color").value = p.color||"";
+      qs("#pf_details").value = p.details||"";
+      window.scrollTo({top:0, behavior:"smooth"});
+    };
+  });
+  tbody.querySelectorAll("[data-del]").forEach(b=>{
+    b.onclick = ()=>{
+      const id = b.getAttribute("data-del");
+      const arr = getProducts().filter(x=>x.id!==id);
+      setProducts(arr);
+      toast("Product deleted");
+      renderProductsAdmin(); renderHome(); renderCategories();
+    };
+  });
+}
+
+// Save / Reset product form
+qs("#pf_reset").onclick = ()=>{
+  ["pf_id","pf_name","pf_price","pf_cost","pf_color","pf_details"].forEach(id=>qs("#"+id).value="");
+  qs("#pf_img").value = "";
+};
+
+qs("#pf_submit").onclick = async ()=>{
+  const id = qs("#pf_id").value || uid();
+  const name = qs("#pf_name").value.trim();
+  const cat = qs("#pf_cat").value;
+  const price = Number(qs("#pf_price").value||0);
+  const cost = Number(qs("#pf_cost").value||0);
+  const color = qs("#pf_color").value.trim();
+  const details = qs("#pf_details").value.trim();
+  let imgData = null;
+
+  const existing = getProducts().find(p=>p.id===id);
+  const file = qs("#pf_img").files[0];
+  if(file){ imgData = await readFileAsDataURL(file); }
+  else { imgData = existing ? existing.img : null; }
+
+  if(!name || !cat || price<=0 || !imgData){
+    toast("Please fill name, category, price and image");
+    return;
+  }
+
+  let list = getProducts();
+  const data = {id, name, cat, price, cost, color, details, img:imgData};
+  if(existing){
+    list = list.map(p=> p.id===id ? data : p);
+  } else {
+    list.push(data);
+  }
+  setProducts(list);
+  toast(existing ? "Product updated" : "Product added");
+  qs("#pf_reset").click();
+  renderProductsAdmin(); renderHome(); renderCategories();
+};
+
+/* ADS ADMIN */
+function renderAdsAdmin(){
+  const a = getAds();
+  qs("#ad_home_title").value = a.homeTitle || "";
+  qs("#ad_home_sub").value = a.homeSub || "";
+  qs("#ad_mid_title").value = a.midTitle || "";
+  qs("#ad_mid_sub").value = a.midSub || "";
+}
+qs("#ads_save").onclick = ()=>{
+  setAds({
+    homeTitle: qs("#ad_home_title").value,
+    homeSub: qs("#ad_home_sub").value,
+    midTitle: qs("#ad_mid_title").value,
+    midSub: qs("#ad_mid_sub").value,
+  });
+  toast("Ads saved");
+  renderHome();
+};
+
+/* ORDERS ADMIN */
+function renderOrdersAdmin(){
+  const tbody = qs("#ordersTable tbody"); tbody.innerHTML = "";
+  const orders = getOrders().sort((a,b)=> new Date(b.date)-new Date(a.date));
+  orders.forEach(o=>{
+    const tr = document.createElement("tr");
+    const itemsText = o.items.map(i=>`${i.name} x${i.qty}`).join(", ");
+    tr.innerHTML = `
+      <td>${new Date(o.date).toLocaleString()}</td>
+      <td>${o.customer.name} (${o.customer.phone})</td>
+      <td>${itemsText}</td>
+      <td>${formatINR(o.total)}</td>
+      <td>${formatINR(o.profit||0)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* CUSTOMERS ADMIN */
+function renderCustomersAdmin(){
+  const tbody = qs("#custTable tbody"); tbody.innerHTML = "";
+  getCustomers().forEach(c=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${c.name}</td>
+      <td>${c.phone}</td>
+      <td>${c.firstSeen ? new Date(c.firstSeen).toLocaleString() : "-"}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ABOUT ADMIN */
+function renderAboutAdmin(){
+  const a = getAbout();
+  qs("#ab_title").value = a.title || "About SheiMar";
+  qs("#ab_area").value = a.area || "Serving Kashmir (Only)";
+  qs("#ab_care").value = a.care || "+91 97974 88873";
+  qs("#ab_email").value = a.email || "support@sheimar.com";
+  qs("#ab_mission").value = a.mission || "";
+  qs("#ab_story").value = a.story || "";
+  // future can be edited as multiline
+  const futureRaw = qs("#ab_future").value.trim();
+  const future = futureRaw ? futureRaw.split("\n").map(s=>s.trim()).filter(Boolean) : [];
+  const temp = document.createElement("textarea");
+  temp.id = "ab_future_hidden_sink";
+  temp.style.display="none";
+  document.body.appendChild(temp);
+  temp.value = future.join("\n");
+  document.body.removeChild(temp);
+  qs("#ab_future").value = temp.value;
+}
+
+qs("#ab_save").onclick = ()=>{
+  const futureRaw = qs("#ab_future").value.trim();
+  const future = futureRaw ? futureRaw.split("\n").map(s=>s.trim()).filter(Boolean) : [];
+  setAbout({
+    title: qs("#ab_title").value.trim() || "About SheiMar",
+    area: qs("#ab_area").value.trim() || "Serving Kashmir (Only)",
+    mission: qs("#ab_mission").value.trim(),
+    story: qs("#ab_story").value.trim(),
+    future,
+    care: qs("#ab_care").value.trim() || "+91 97974 88873",
+    email: qs("#ab_email").value.trim() || "support@sheimar.com"
+  });
+  toast("About content saved");
+  renderAbout();
+};
+
+/* SETTINGS ADMIN */
+function renderSettingsAdmin(){
+  const s = getSettings();
+  qs("#set_first").value = s.first || "Shei";
+  qs("#set_second").value = s.second || "Mar";
+  qs("#set_wa").value = s.whatsapp || "";
+  qs("#set_insta").value = s.instagram || "";
+  qs("#set_yt").value = s.youtube || "";
+  qs("#set_fb").value = s.facebook || "";
+}
+qs("#set_save").onclick = async ()=>{
+  const s = getSettings();
+  const f = qs("#set_logo").files[0];
+  let logo = s.logo;
+  if(f){ logo = await readFileAsDataURL(f); }
+  const updated = {
+    first: qs("#set_first").value.trim()||"Shei",
+    second: qs("#set_second").value.trim()||"Mar",
+    logo,
+    whatsapp: (qs("#set_wa").value.trim() || s.whatsapp || "919797488873").replace(/\s|\+/g,""),
+    instagram: qs("#set_insta").value.trim(),
+    youtube: qs("#set_yt").value.trim(),
+    facebook: qs("#set_fb").value.trim()
+  };
+  setSettings(updated);
+  toast("Settings saved");
+  renderHome();
+  renderCompanyDetails();
+};
+
+/* ---------- SEARCH ---------- */
+qs("#searchBox").addEventListener("input", (e)=>{
+  STATE.search = e.target.value;
+  if(STATE.tab==="home") renderHome();
+  if(STATE.tab==="categories") renderCategories();
+});
+
+/* ---------- INIT ---------- */
+bootOnce();
+renderHome();
+renderCompanyDetails();
+updateCartBadge();
+show("home"); // default
+</script>
+</body>
+</html>
